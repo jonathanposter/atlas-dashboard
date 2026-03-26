@@ -4,13 +4,13 @@ import type { NextRequest } from "next/server";
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Allow login page and API auth routes
+  // With basePath: '/dashboard', pathname does NOT include /dashboard prefix
+  // Allow login page, API routes, static assets
   if (
-    pathname === "/dashboard/login" ||
-    pathname === "/dashboard/api/auth/login" ||
-    pathname === "/dashboard/api/health" ||
-    pathname.startsWith("/dashboard/_next") ||
-    pathname.startsWith("/dashboard/favicon")
+    pathname === "/login" ||
+    pathname.startsWith("/api/") ||
+    pathname.startsWith("/_next") ||
+    pathname.startsWith("/favicon")
   ) {
     return NextResponse.next();
   }
@@ -20,7 +20,7 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/dashboard/login", request.url));
   }
 
-  // Basic JWT structure check (full verify happens in API routes)
+  // Basic JWT structure check
   const parts = token.split(".");
   if (parts.length !== 3) {
     return NextResponse.redirect(new URL("/dashboard/login", request.url));
@@ -30,5 +30,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*"],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
 };
