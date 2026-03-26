@@ -34,7 +34,7 @@ export function sessionCookieOptions(token: string) {
     name: COOKIE_NAME,
     value: token,
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: false,
     sameSite: "lax" as const,
     path: "/dashboard",
     maxAge: 60 * 60 * 24 * 7, // 7 days
