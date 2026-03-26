@@ -1,0 +1,71 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --atlas-bg: #0c0e14;
+  --atlas-surface: #1e2130;
+  --atlas-purple: #7c3aed;
+  --atlas-blue: #3b82f6;
+}
+
+body {
+  background: var(--atlas-bg);
+  color: #e2e8f0;
+  font-family: 'IBM Plex Sans', -apple-system, sans-serif;
+}
+
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(100, 116, 139, 0.2); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(100, 116, 139, 0.4); }
+
+.chat-markdown h1 { font-size: 1.25rem; font-weight: 700; color: #c4b5fd; margin: 0.75rem 0 0.5rem; }
+.chat-markdown h2 { font-size: 1.125rem; font-weight: 700; color: #c4b5fd; margin: 0.75rem 0 0.5rem; }
+.chat-markdown h3 { font-size: 1rem; font-weight: 600; color: #c4b5fd; margin: 0.5rem 0 0.25rem; }
+.chat-markdown p { margin: 0.25rem 0; line-height: 1.6; }
+.chat-markdown ul, .chat-markdown ol { padding-left: 1.5rem; margin: 0.25rem 0; }
+.chat-markdown li { margin: 0.125rem 0; line-height: 1.6; }
+.chat-markdown strong { color: #f1f5f9; font-weight: 600; }
+.chat-markdown code:not(pre code) {
+  background: rgba(139, 92, 246, 0.15);
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-size: 0.88em;
+  font-family: 'JetBrains Mono', monospace;
+}
+.chat-markdown pre {
+  background: rgba(15, 17, 25, 0.8);
+  border: 1px solid rgba(100, 116, 139, 0.2);
+  border-radius: 8px;
+  padding: 1rem;
+  margin: 0.5rem 0;
+  overflow-x: auto;
+}
+.chat-markdown pre code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85em;
+  line-height: 1.5;
+}
+.chat-markdown table { border-collapse: collapse; width: 100%; margin: 0.5rem 0; }
+.chat-markdown th, .chat-markdown td {
+  border: 1px solid rgba(100, 116, 139, 0.2);
+  padding: 0.5rem;
+  text-align: left;
+  font-size: 0.85rem;
+}
+.chat-markdown th { background: rgba(139, 92, 246, 0.1); font-weight: 600; }
+.chat-markdown blockquote {
+  border-left: 3px solid #7c3aed;
+  padding-left: 1rem;
+  margin: 0.5rem 0;
+  color: #94a3b8;
+}
+
+@keyframes statusPulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 8px rgba(34, 197, 94, 0.4); }
+  50% { opacity: 0.6; box-shadow: 0 0 4px rgba(34, 197, 94, 0.2); }
+}
+.status-pulse { animation: statusPulse 2s ease-in-out infinite; }

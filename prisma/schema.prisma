@@ -1,0 +1,135 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  password  String
+  createdAt DateTime @default(now())
+
+  @@map("users")
+}
+
+model ProjectState {
+  id           Int      @id @default(1)
+  currentPhase Int      @default(0)
+  stats        Json     @default("{\"hypothesesGenerated\":0,\"hypothesesKilled\":0,\"strategiesInPipeline\":0,\"strategiesDeployed\":0}")
+  updatedAt    DateTime @updatedAt
+
+  @@map("project_state")
+}
+
+model ChatMessage {
+  id        Int      @id @default(autoincrement())
+  role      String
+  content   String
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  @@map("chat_messages")
+}
+
+model Task {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String?
+  type        String
+  status      String   @default("pending")
+  priority    Int      @default(0)
+  proposedBy  String   @default("user")
+  result      String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("tasks")
+}
+
+model Strategy {
+  id              Int      @id @default(autoincrement())
+  name            String
+  slug            String   @unique
+  category        String
+  pipelineStage   Int      @default(0)
+  hypothesis      String?
+  killCriteria    String?
+  scorecard       Json?
+  backtestResults Json?
+  wfaResults      Json?
+  liveMetrics     Json?
+  status          String   @default("active")
+  killReason      String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("strategies")
+}
+
+model Hypothesis {
+  id                      Int      @id @default(autoincrement())
+  title                   String
+  category                String
+  thesis                  String
+  economicRationale       String
+  persistenceArgument     String?
+  dataRequirements        String?
+  expectedCharacteristics String?
+  killCriteria            String
+  retailEdgeClass         String?
+  benchmark               String?
+  status                  String   @default("draft")
+  researchSources         Json?
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+
+  @@map("hypotheses")
+}
+
+model ActivityLog {
+  id        Int      @id @default(autoincrement())
+  event     String
+  type      String
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  @@map("activity_log")
+}
+
+model Setting {
+  id    Int    @id @default(1)
+  key   String @unique
+  value String
+
+  @@map("settings")
+}
+
+model ExecutionLog {
+  id            Int      @id @default(autoincrement())
+  tool          String
+  input         Json
+  output        String?
+  success       Boolean
+  durationMs    Int?
+  chatMessageId Int?
+  createdAt     DateTime @default(now())
+
+  @@map("execution_log")
+}
+
+model BackgroundJob {
+  id          Int       @id @default(autoincrement())
+  type        String
+  payload     Json
+  status      String    @default("queued")
+  output      String?
+  error       String?
+  startedAt   DateTime?
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@map("background_jobs")
+}
