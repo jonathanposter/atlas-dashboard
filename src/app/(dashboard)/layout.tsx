@@ -59,7 +59,7 @@ export default function DashboardLayout({
 
   const handleLogout = async () => {
     await fetch("/dashboard/api/auth/logout", { method: "POST" });
-    router.push("/dashboard/login");
+    router.push("/login");
   };
 
   const phase = PHASES[state?.currentPhase ?? 0];
