@@ -12,6 +12,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends openssl && rm -
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+RUN mkdir -p /app/public
 RUN npx prisma generate
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_OPTIONS="--max-old-space-size=2048"
