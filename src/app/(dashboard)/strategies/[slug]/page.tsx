@@ -67,7 +67,7 @@ export default function StrategyDetailPage({ params }: { params: Promise<{ slug:
     <div className="p-5 max-w-5xl mx-auto">
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-xs text-atlas-muted mb-4">
-        <Link href="/dashboard/pipeline" className="hover:text-atlas-text">
+        <Link href="/pipeline" className="hover:text-atlas-text">
           Pipeline
         </Link>
         <span>→</span>

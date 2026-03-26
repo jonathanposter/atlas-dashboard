@@ -5,14 +5,14 @@ import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 
 const NAV_ITEMS = [
-  { href: "/dashboard", label: "Mission Control", icon: "◉" },
-  { href: "/dashboard/chat", label: "Atlas AI", icon: "⬡" },
-  { href: "/dashboard/tasks", label: "Tasks", icon: "☰" },
-  { href: "/dashboard/pipeline", label: "Pipeline", icon: "▸▸" },
-  { href: "/dashboard/research", label: "Research", icon: "◈" },
-  { href: "/dashboard/workspace", label: "Workspace", icon: "📁" },
-  { href: "/dashboard/log", label: "Activity Log", icon: "▤" },
-  { href: "/dashboard/settings", label: "Settings", icon: "⚙" },
+  { href: "/", label: "Mission Control", icon: "◉" },
+  { href: "/chat", label: "Atlas AI", icon: "⬡" },
+  { href: "/tasks", label: "Tasks", icon: "☰" },
+  { href: "/pipeline", label: "Pipeline", icon: "▸▸" },
+  { href: "/research", label: "Research", icon: "◈" },
+  { href: "/workspace", label: "Workspace", icon: "📁" },
+  { href: "/log", label: "Activity Log", icon: "▤" },
+  { href: "/settings", label: "Settings", icon: "⚙" },
 ];
 
 interface ProjectState {
@@ -93,9 +93,9 @@ export default function DashboardLayout({
         <nav className="flex-1 py-2 overflow-y-auto">
           {NAV_ITEMS.map((item) => {
             const active =
-              item.href === "/dashboard"
-                ? pathname === "/dashboard"
-                : pathname.startsWith(item.href);
+              item.href === "/"
+                ? pathname === "/dashboard" || pathname === "/"
+                : pathname.startsWith("/dashboard" + item.href);
             return (
               <Link
                 key={item.href}

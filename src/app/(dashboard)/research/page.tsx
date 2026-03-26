@@ -85,7 +85,7 @@ export default function ResearchPage() {
         </h1>
         <div className="flex gap-2">
           <Link
-            href="/dashboard/chat?prompt=Generate+a+comprehensive+research+brief+for+a+new+trading+hypothesis+category.+Suggest+the+most+promising+areas."
+            href="/chat?prompt=Generate+a+comprehensive+research+brief+for+a+new+trading+hypothesis+category.+Suggest+the+most+promising+areas."
             className="px-3 py-1.5 rounded-md border border-atlas-blue/30 text-atlas-blue text-[11px] font-semibold hover:bg-atlas-blue/10"
           >
             Generate Research Brief

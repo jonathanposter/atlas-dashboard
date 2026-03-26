@@ -110,7 +110,7 @@ function PipelineContent() {
                 {stageStrategies.map((s) => (
                   <Link
                     key={s.id}
-                    href={`/dashboard/strategies/${s.slug}`}
+                    href={`/strategies/${s.slug}`}
                     className="block p-2.5 rounded-lg bg-atlas-surface/40 border border-slate-700/10 hover:border-atlas-purple/30 transition-all"
                   >
                     <div className="flex items-center justify-between mb-1">

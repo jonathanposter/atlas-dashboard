@@ -125,7 +125,7 @@ export default function MissionControlPage() {
         <div className="grid grid-cols-6 gap-2">
           {PIPELINE_STAGES.map((stage, i) => (
             <Link
-              href={`/dashboard/pipeline?stage=${i}`}
+              href={`/pipeline?stage=${i}`}
               key={i}
               className="p-3 rounded-lg text-center transition-all hover:scale-[1.02]"
               style={{
@@ -231,7 +231,7 @@ export default function MissionControlPage() {
             ].map((action, i) => (
               <Link
                 key={i}
-                href={`/dashboard/chat?prompt=${encodeURIComponent(action.prompt)}`}
+                href={`/chat?prompt=${encodeURIComponent(action.prompt)}`}
                 className="block w-full text-left px-3 py-2 rounded-md text-xs font-medium text-atlas-purple-soft hover:bg-atlas-purple/10 border border-transparent hover:border-atlas-purple/20 transition-all"
               >
                 {action.label} →
@@ -243,7 +243,7 @@ export default function MissionControlPage() {
           {pendingTasks.length > 0 && (
             <div className="mt-4 pt-3 border-t border-slate-700/20">
               <Link
-                href="/dashboard/tasks"
+                href="/tasks"
                 className="flex items-center justify-between text-xs"
               >
                 <span className="text-atlas-amber font-semibold">
