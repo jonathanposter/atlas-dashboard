@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { decrypt } from "@/lib/encrypt";
 import { ATLAS_SYSTEM_PROMPT } from "@/lib/atlas-prompt";
+import { ATLAS_MODEL } from "@/lib/constants";
 
 export async function POST(request: NextRequest) {
   try {
@@ -56,7 +57,7 @@ Conclude with a clear PASS/CONCERN/FAIL recommendation with specific reasons.`;
         "anthropic-version": "2023-06-01",
       },
       body: JSON.stringify({
-        model: "claude-sonnet-4-20250514",
+        model: ATLAS_MODEL,
         max_tokens: 4096,
         system: ATLAS_SYSTEM_PROMPT,
         messages: [{ role: "user", content: prompt }],

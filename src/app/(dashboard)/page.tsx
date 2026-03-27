@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import AtlasChatPanel from "@/components/AtlasChatPanel";
 
 interface ProjectState {
   currentPhase: number;
@@ -55,6 +56,9 @@ export default function MissionControlPage() {
   const [pendingTasks, setPendingTasks] = useState<Task[]>([]);
   const [recentLogs, setRecentLogs] = useState<LogEntry[]>([]);
   const [strategies, setStrategies] = useState<Strategy[]>([]);
+  const [pendingPrompt, setPendingPrompt] = useState("");
+
+  const handlePromptConsumed = useCallback(() => setPendingPrompt(""), []);
 
   useEffect(() => {
     Promise.all([
@@ -116,79 +120,79 @@ export default function MissionControlPage() {
   };
 
   return (
-    <div className="p-5 space-y-6 max-w-7xl mx-auto">
-      {/* Pipeline Stages */}
-      <div>
-        <h2 className="text-[11px] font-bold text-atlas-muted tracking-widest mb-3">
-          PIPELINE STAGES
-        </h2>
-        <div className="grid grid-cols-6 gap-2">
-          {PIPELINE_STAGES.map((stage, i) => (
-            <Link
-              href={`/pipeline?stage=${i}`}
+    <div className="flex h-full overflow-hidden">
+      {/* LEFT COLUMN — Pipeline & Stats */}
+      <div className="w-[62%] flex-shrink-0 overflow-y-auto p-5 space-y-5">
+        {/* Pipeline Stages */}
+        <div>
+          <h2 className="text-[11px] font-bold text-atlas-muted tracking-widest mb-3">
+            PIPELINE STAGES
+          </h2>
+          <div className="grid grid-cols-3 gap-2">
+            {PIPELINE_STAGES.map((stage, i) => (
+              <Link
+                href={`/pipeline?stage=${i}`}
+                key={i}
+                className="p-3 rounded-lg text-center transition-all hover:scale-[1.02]"
+                style={{
+                  background:
+                    stageCounts[i] > 0
+                      ? `${stage.color}12`
+                      : "rgba(30,33,48,0.4)",
+                  border: `1px solid ${
+                    stageCounts[i] > 0
+                      ? stage.color + "40"
+                      : "rgba(100,116,139,0.1)"
+                  }`,
+                }}
+              >
+                <div className="text-xl mb-1">{stage.icon}</div>
+                <div
+                  className="text-[11px] font-semibold"
+                  style={{
+                    color: stageCounts[i] > 0 ? stage.color : "#64748b",
+                  }}
+                >
+                  {stage.name}
+                </div>
+                <div
+                  className="text-[10px] font-bold mt-1"
+                  style={{
+                    color: stageCounts[i] > 0 ? stage.color : "#475569",
+                  }}
+                >
+                  {stageCounts[i] > 0 ? `${stageCounts[i]} active` : "—"}
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+
+        {/* Stats */}
+        <div className="grid grid-cols-2 gap-3">
+          {[
+            { label: "Hypotheses Researched", value: stats.hypothesesGenerated, color: "#a78bfa" },
+            { label: "Hypotheses Killed", value: stats.hypothesesKilled, color: "#f87171" },
+            { label: "Strategies in Pipeline", value: stats.strategiesInPipeline, color: "#60a5fa" },
+            { label: "Strategies Deployed", value: stats.strategiesDeployed, color: "#34d399" },
+          ].map((stat, i) => (
+            <div
               key={i}
-              className="p-3 rounded-lg text-center transition-all hover:scale-[1.02]"
-              style={{
-                background:
-                  stageCounts[i] > 0
-                    ? `${stage.color}12`
-                    : "rgba(30,33,48,0.4)",
-                border: `1px solid ${
-                  stageCounts[i] > 0
-                    ? stage.color + "40"
-                    : "rgba(100,116,139,0.1)"
-                }`,
-              }}
+              className="p-3 rounded-lg bg-atlas-surface/40 border border-slate-700/10"
             >
-              <div className="text-xl mb-1">{stage.icon}</div>
               <div
-                className="text-[11px] font-semibold"
-                style={{
-                  color: stageCounts[i] > 0 ? stage.color : "#64748b",
-                }}
+                className="text-2xl font-extrabold tracking-tight"
+                style={{ color: stat.color }}
               >
-                {stage.name}
+                {stat.value}
               </div>
-              <div
-                className="text-[10px] font-bold mt-1"
-                style={{
-                  color: stageCounts[i] > 0 ? stage.color : "#475569",
-                }}
-              >
-                {stageCounts[i] > 0 ? `${stageCounts[i]} active` : "—"}
-              </div>
-            </Link>
+              <div className="text-[10px] text-atlas-muted mt-1">{stat.label}</div>
+            </div>
           ))}
         </div>
-      </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-4 gap-3">
-        {[
-          { label: "Hypotheses Researched", value: stats.hypothesesGenerated, color: "#a78bfa" },
-          { label: "Hypotheses Killed", value: stats.hypothesesKilled, color: "#f87171" },
-          { label: "Strategies in Pipeline", value: stats.strategiesInPipeline, color: "#60a5fa" },
-          { label: "Strategies Deployed", value: stats.strategiesDeployed, color: "#34d399" },
-        ].map((stat, i) => (
-          <div
-            key={i}
-            className="p-4 rounded-lg bg-atlas-surface/40 border border-slate-700/10"
-          >
-            <div
-              className="text-3xl font-extrabold tracking-tight"
-              style={{ color: stat.color }}
-            >
-              {stat.value}
-            </div>
-            <div className="text-[11px] text-atlas-muted mt-1">{stat.label}</div>
-          </div>
-        ))}
-      </div>
-
-      {/* Two columns: Phase + Quick Actions */}
-      <div className="grid grid-cols-2 gap-4">
-        {/* Current Phase */}
-        <div className="p-5 rounded-lg bg-atlas-surface/40 border border-slate-700/10">
+        {/* Phase Objectives */}
+        <div className="p-4 rounded-lg bg-atlas-surface/40 border border-slate-700/10">
           <h3 className="text-[11px] font-bold text-atlas-muted tracking-widest mb-3">
             CURRENT PHASE OBJECTIVES
           </h3>
@@ -209,7 +213,7 @@ export default function MissionControlPage() {
           {state && state.currentPhase < PHASES.length - 1 && (
             <button
               onClick={advancePhase}
-              className="mt-4 px-4 py-1.5 rounded-md text-[11px] font-bold text-white"
+              className="mt-3 px-4 py-1.5 rounded-md text-[11px] font-bold text-white"
               style={{ background: phase.color }}
             >
               Advance Phase →
@@ -218,30 +222,29 @@ export default function MissionControlPage() {
         </div>
 
         {/* Quick Actions */}
-        <div className="p-5 rounded-lg bg-atlas-surface/40 border border-slate-700/10">
+        <div className="p-4 rounded-lg bg-atlas-surface/40 border border-slate-700/10">
           <h3 className="text-[11px] font-bold text-atlas-muted tracking-widest mb-3">
             QUICK ACTIONS
           </h3>
-          <div className="space-y-2">
+          <div className="grid grid-cols-2 gap-2">
             {[
               { label: "Start Research Brief", prompt: "Generate a comprehensive research brief for a new trading hypothesis category. Suggest the most promising areas based on current academic literature and retail edge opportunities." },
               { label: "Propose Next Tasks", prompt: "Based on the current project state, propose the next 3 high-priority tasks that will most effectively advance the pipeline. Format with clear success criteria." },
               { label: "Review Strategy", prompt: "Perform an adversarial review of our current pipeline. What are the biggest risks and blind spots?" },
               { label: "Weekly Health Report", prompt: "Generate a weekly health report covering: pipeline progress, hypothesis library status, key metrics, blockers, and recommended priorities for next week." },
             ].map((action, i) => (
-              <Link
+              <button
                 key={i}
-                href={`/chat?prompt=${encodeURIComponent(action.prompt)}`}
-                className="block w-full text-left px-3 py-2 rounded-md text-xs font-medium text-atlas-purple-soft hover:bg-atlas-purple/10 border border-transparent hover:border-atlas-purple/20 transition-all"
+                onClick={() => setPendingPrompt(action.prompt)}
+                className="text-left px-3 py-2 rounded-md text-xs font-medium text-atlas-purple-soft hover:bg-atlas-purple/10 border border-transparent hover:border-atlas-purple/20 transition-all"
               >
                 {action.label} →
-              </Link>
+              </button>
             ))}
           </div>
 
-          {/* Pending Approvals */}
           {pendingTasks.length > 0 && (
-            <div className="mt-4 pt-3 border-t border-slate-700/20">
+            <div className="mt-3 pt-3 border-t border-slate-700/20">
               <Link
                 href="/tasks"
                 className="flex items-center justify-between text-xs"
@@ -254,39 +257,47 @@ export default function MissionControlPage() {
             </div>
           )}
         </div>
-      </div>
 
-      {/* Recent Activity */}
-      <div>
-        <h2 className="text-[11px] font-bold text-atlas-muted tracking-widest mb-3">
-          RECENT ACTIVITY
-        </h2>
-        <div className="space-y-0">
-          {recentLogs.map((entry) => (
-            <div
-              key={entry.id}
-              className="flex items-start gap-3 py-2 border-b border-slate-800/30"
-            >
+        {/* Recent Activity */}
+        <div>
+          <h2 className="text-[11px] font-bold text-atlas-muted tracking-widest mb-3">
+            RECENT ACTIVITY
+          </h2>
+          <div className="space-y-0">
+            {recentLogs.map((entry) => (
               <div
-                className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0"
-                style={{ background: typeColor[entry.type] || "#475569" }}
-              />
-              <div className="flex-1 min-w-0">
-                <div className="text-xs text-atlas-text truncate">
-                  {entry.event}
-                </div>
-                <div className="text-[10px] text-atlas-dim mt-0.5">
-                  {new Date(entry.createdAt).toLocaleString()}
+                key={entry.id}
+                className="flex items-start gap-3 py-2 border-b border-slate-800/30"
+              >
+                <div
+                  className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0"
+                  style={{ background: typeColor[entry.type] || "#475569" }}
+                />
+                <div className="flex-1 min-w-0">
+                  <div className="text-xs text-atlas-text truncate">
+                    {entry.event}
+                  </div>
+                  <div className="text-[10px] text-atlas-dim mt-0.5">
+                    {new Date(entry.createdAt).toLocaleString()}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-          {recentLogs.length === 0 && (
-            <div className="text-xs text-atlas-dim text-center py-8">
-              No activity yet
-            </div>
-          )}
+            ))}
+            {recentLogs.length === 0 && (
+              <div className="text-xs text-atlas-dim text-center py-6">
+                No activity yet
+              </div>
+            )}
+          </div>
         </div>
+      </div>
+
+      {/* RIGHT COLUMN — Atlas AI Chat */}
+      <div className="flex-1 border-l border-slate-800/50 flex flex-col min-w-0">
+        <AtlasChatPanel
+          pendingPrompt={pendingPrompt}
+          onPromptConsumed={handlePromptConsumed}
+        />
       </div>
     </div>
   );

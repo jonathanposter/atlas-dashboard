@@ -6,6 +6,12 @@ import { ATLAS_SYSTEM_PROMPT, PHASES } from "@/lib/atlas-prompt";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { executeTool } from "@/lib/tools/executor";
 import { ATLAS_TOOLS } from "@/lib/tools/definitions";
+import { SERVER_TOOLS } from "@/lib/tools/server-definitions";
+import { executeServerTool } from "@/lib/tools/server-executor";
+import { ATLAS_MODEL } from "@/lib/constants";
+
+const SERVER_TOOL_NAMES = SERVER_TOOLS.map((t) => t.name);
+const ALL_TOOLS = [...ATLAS_TOOLS, ...SERVER_TOOLS];
 
 export const dynamic = "force-dynamic";
 
@@ -99,8 +105,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { message } = await request.json();
-    if (!message?.trim()) {
+    const body = await request.json();
+    const { message, resumeConversation } = body;
+    if (!message?.trim() && !resumeConversation) {
       return NextResponse.json({ error: "Message required" }, { status: 400 });
     }
 
@@ -120,27 +127,36 @@ export async function POST(request: NextRequest) {
 
     const apiKey = decrypt(apiKeySetting.value);
 
-    // Save user message
-    await prisma.chatMessage.create({
-      data: { role: "user", content: message },
-    });
-
     // Build context
     const stateContext = await buildStateContext();
     const systemPrompt = ATLAS_SYSTEM_PROMPT + stateContext;
 
-    // Get conversation history (last 20 messages)
-    const history = await prisma.chatMessage.findMany({
-      orderBy: { createdAt: "desc" },
-      take: 20,
-    });
-    const currentMessages: Array<{
+    let currentMessages: Array<{
       role: string;
-      content: string | ContentBlock[];
-    }> = history.reverse().map((m) => ({
-      role: m.role,
-      content: m.content,
-    }));
+      content: unknown;
+    }>;
+
+    if (resumeConversation) {
+      // Resume from paused approval — restore conversation state with tool result
+      currentMessages = [
+        ...(resumeConversation.conversationState as Array<{ role: string; content: unknown }>),
+        { role: "user", content: resumeConversation.toolResults },
+      ];
+    } else {
+      // Normal flow — save user message and load history
+      await prisma.chatMessage.create({
+        data: { role: "user", content: message },
+      });
+
+      const history = await prisma.chatMessage.findMany({
+        orderBy: { createdAt: "desc" },
+        take: 20,
+      });
+      currentMessages = history.reverse().map((m) => ({
+        role: m.role,
+        content: m.content,
+      }));
+    }
 
     // SSE streaming response
     const encoder = new TextEncoder();
@@ -152,8 +168,8 @@ export async function POST(request: NextRequest) {
           );
         }
 
-        let finalText = "";
-        const toolExecutions: ToolExecution[] = [];
+        let finalText = resumeConversation?.textSoFar || "";
+        const toolExecutions: ToolExecution[] = resumeConversation?.toolExecutionsSoFar || [];
         const MAX_ITERATIONS = 15;
 
         try {
@@ -173,11 +189,11 @@ export async function POST(request: NextRequest) {
                   "anthropic-version": "2023-06-01",
                 },
                 body: JSON.stringify({
-                  model: "claude-sonnet-4-20250514",
+                  model: ATLAS_MODEL,
                   max_tokens: 4096,
                   system: systemPrompt,
                   messages: currentMessages,
-                  tools: ATLAS_TOOLS,
+                  tools: ALL_TOOLS,
                 }),
               }
             );
@@ -216,12 +232,36 @@ export async function POST(request: NextRequest) {
               content: string;
             }> = [];
 
+            let paused = false;
             for (const toolUse of toolUseBlocks) {
+              const toolInput = toolUse.input as Record<string, unknown>;
               const toolDesc =
-                (toolUse.input as Record<string, string>).description ||
-                (toolUse.input as Record<string, string>).path ||
-                (toolUse.input as Record<string, string>).command ||
+                (toolInput.description as string) ||
+                (toolInput.reason as string) ||
+                (toolInput.path as string) ||
+                (toolInput.command as string) ||
                 "";
+
+              // Check if this is a server tool needing approval
+              if (
+                SERVER_TOOL_NAMES.includes(toolUse.name!) &&
+                toolInput.requires_approval === true
+              ) {
+                // Send approval_required event and pause
+                sendEvent("approval_required", {
+                  toolCallId: toolUse.id,
+                  tool: toolUse.name,
+                  input: toolInput,
+                  reason: toolInput.reason || "",
+                  conversationState: currentMessages,
+                  pendingToolUses: toolUseBlocks,
+                  textSoFar: finalText,
+                  toolExecutionsSoFar: toolExecutions,
+                });
+                sendEvent("paused", { reason: "awaiting_approval" });
+                paused = true;
+                break;
+              }
 
               // Notify: tool starting
               sendEvent("tool_start", {
@@ -229,10 +269,24 @@ export async function POST(request: NextRequest) {
                 description: toolDesc,
               });
 
-              const { result, success } = await executeTool(
-                toolUse.name!,
-                toolUse.input as Record<string, unknown>
-              );
+              // Execute server tools or workspace tools
+              let result: string;
+              let success: boolean;
+              if (SERVER_TOOL_NAMES.includes(toolUse.name!)) {
+                const out = await executeServerTool(
+                  toolUse.name!,
+                  toolInput
+                );
+                result = out.result;
+                success = out.success;
+              } else {
+                const out = await executeTool(
+                  toolUse.name!,
+                  toolInput
+                );
+                result = out.result;
+                success = out.success;
+              }
 
               const execution: ToolExecution = {
                 tool: toolUse.name!,
@@ -252,6 +306,8 @@ export async function POST(request: NextRequest) {
               // Notify: tool completed
               sendEvent("tool_complete", execution);
             }
+
+            if (paused) break; // Exit the agentic loop — waiting for approval
 
             // Feed results back to Claude for next iteration
             currentMessages.push({ role: "assistant", content: data.content });
