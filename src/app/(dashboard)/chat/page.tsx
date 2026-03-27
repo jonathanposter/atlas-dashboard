@@ -20,27 +20,59 @@ interface Message {
 }
 
 const PROMPT_TEMPLATES = [
-  { label: "Research a hypothesis", prompt: "Research a hypothesis in the [category] category. Analyze academic literature, market microstructure, and historical patterns. Produce a structured research brief with testable hypotheses and kill criteria." },
-  { label: "Write MQL5 EA", prompt: "Write a complete MQL5 Expert Advisor for [strategy]. Use modular architecture: Signal, Risk, Execution, Session, Regime, Logger modules. Production-ready code, not pseudocode." },
-  { label: "Review backtest results", prompt: "I've run the backtest for [strategy]. Here are the results: [paste results]. Apply the 50-point scorecard and provide a detailed analysis. Flag any overfitting concerns." },
-  { label: "Adversarial critique", prompt: "Perform an adversarial critique of [strategy]. Be ruthlessly honest about: overfitting risk, data snooping bias, regime dependency, parameter sensitivity, and any logical errors in the hypothesis." },
-  { label: "Propose next 3 tasks", prompt: "Based on the current project state, propose the next 3 highest-priority tasks. For each: what to do, why it advances the pipeline, success criteria, and whether it needs approval." },
-  { label: "Weekly health report", prompt: "Generate a comprehensive weekly health report covering: pipeline progress, hypothesis library status, strategy metrics, blockers, risks, and recommended priorities for next week." },
-  { label: "List workspace", prompt: "List what's in the workspace and tell me the current project structure." },
-  { label: "Run Python analysis", prompt: "Write and run a Python script that [describe analysis]. Show me the results." },
+  {
+    label: "Research a hypothesis",
+    prompt:
+      "Research a hypothesis in the [category] category. Analyze academic literature, market microstructure, and historical patterns. Produce a structured research brief with testable hypotheses and kill criteria.",
+  },
+  {
+    label: "Write MQL5 EA",
+    prompt:
+      "Write a complete MQL5 Expert Advisor for [strategy]. Use modular architecture: Signal, Risk, Execution, Session, Regime, Logger modules. Production-ready code, not pseudocode.",
+  },
+  {
+    label: "Review backtest results",
+    prompt:
+      "I've run the backtest for [strategy]. Here are the results: [paste results]. Apply the 50-point scorecard and provide a detailed analysis. Flag any overfitting concerns.",
+  },
+  {
+    label: "Adversarial critique",
+    prompt:
+      'Perform an adversarial critique of [strategy]. Be ruthlessly honest about: overfitting risk, data snooping bias, regime dependency, parameter sensitivity, and any logical errors in the hypothesis.',
+  },
+  {
+    label: "Propose next 3 tasks",
+    prompt:
+      "Based on the current project state, propose the next 3 highest-priority tasks. For each: what to do, why it advances the pipeline, success criteria, and whether it needs approval.",
+  },
+  {
+    label: "Weekly health report",
+    prompt:
+      "Generate a comprehensive weekly health report covering: pipeline progress, hypothesis library status, strategy metrics, blockers, risks, and recommended priorities for next week.",
+  },
+  {
+    label: "List workspace",
+    prompt:
+      "List what's in the workspace and tell me the current project structure.",
+  },
+  {
+    label: "Run Python analysis",
+    prompt:
+      "Write and run a Python script that [describe analysis]. Show me the results.",
+  },
 ];
 
 const TOOL_ICONS: Record<string, string> = {
-  write_file: "📝",
-  read_file: "📄",
-  execute_python: "🐍",
-  execute_shell: "🖥️",
-  list_directory: "📁",
-  create_task: "📋",
-  update_strategy: "⚙️",
-  create_hypothesis: "💡",
-  update_state_document: "📊",
-  log_activity: "📊",
+  write_file: "\u{1F4DD}",
+  read_file: "\u{1F4C4}",
+  execute_python: "\u{1F40D}",
+  execute_shell: "\u{1F5A5}\uFE0F",
+  list_directory: "\u{1F4C1}",
+  create_task: "\u{1F4CB}",
+  update_strategy: "\u2699\uFE0F",
+  create_hypothesis: "\u{1F4A1}",
+  update_state_document: "\u{1F4CA}",
+  log_activity: "\u{1F4CA}",
 };
 
 function renderMarkdown(text: string): string {
@@ -68,7 +100,7 @@ function renderMarkdown(text: string): string {
 
 function ToolExecutionCard({ exec }: { exec: ToolExecution }) {
   const [expanded, setExpanded] = useState(false);
-  const icon = TOOL_ICONS[exec.tool] || "🔧";
+  const icon = TOOL_ICONS[exec.tool] || "\u{1F527}";
 
   return (
     <div className="rounded-md bg-[#0c0e14]/60 border border-slate-700/20 overflow-hidden">
@@ -90,10 +122,10 @@ function ToolExecutionCard({ exec }: { exec: ToolExecution }) {
               : "bg-atlas-red/15 text-atlas-red"
           }`}
         >
-          {exec.success ? "✅" : "❌"}
+          {exec.success ? "\u2705" : "\u274C"}
         </span>
         <span className="text-[10px] text-atlas-dim">
-          {expanded ? "▾" : "▸"}
+          {expanded ? "\u25BE" : "\u25B8"}
         </span>
       </button>
       {expanded && (
@@ -103,6 +135,40 @@ function ToolExecutionCard({ exec }: { exec: ToolExecution }) {
           </pre>
         </div>
       )}
+    </div>
+  );
+}
+
+function LiveToolCard({
+  tool,
+  description,
+}: {
+  tool: string;
+  description: string;
+}) {
+  const icon = TOOL_ICONS[tool] || "\u{1F527}";
+  return (
+    <div className="rounded-md bg-[#0c0e14]/60 border border-atlas-purple/20 overflow-hidden animate-pulse">
+      <div className="flex items-center gap-2 px-3 py-1.5">
+        <span className="text-sm">{icon}</span>
+        <span className="text-[11px] font-medium text-atlas-purple-light flex-1 truncate">
+          {tool}
+        </span>
+        <span className="text-[10px] text-atlas-dim truncate max-w-[200px]">
+          {description}
+        </span>
+        <div className="flex gap-0.5">
+          {[0, 1, 2].map((j) => (
+            <div
+              key={j}
+              className="w-1 h-1 rounded-full bg-atlas-purple"
+              style={{
+                animation: `bounce3 1.2s ease-in-out ${j * 0.2}s infinite`,
+              }}
+            />
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
@@ -128,6 +194,12 @@ function ChatContent() {
   const [isLoading, setIsLoading] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [error, setError] = useState("");
+  const [statusText, setStatusText] = useState("");
+  const [liveTools, setLiveTools] = useState<
+    { tool: string; description: string }[]
+  >([]);
+  const [completedTools, setCompletedTools] = useState<ToolExecution[]>([]);
+  const [streamingText, setStreamingText] = useState("");
   const chatEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -152,7 +224,7 @@ function ChatContent() {
   // Auto-scroll
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }, [messages, streamingText, liveTools, completedTools]);
 
   // Auto-resize textarea
   const adjustTextarea = useCallback(() => {
@@ -169,8 +241,13 @@ function ChatContent() {
 
     const userMsg: Message = { role: "user", content: input.trim() };
     setMessages((prev) => [...prev, userMsg]);
+    const msgContent = input.trim();
     setInput("");
     setIsLoading(true);
+    setStreamingText("");
+    setLiveTools([]);
+    setCompletedTools([]);
+    setStatusText("Connecting...");
 
     if (textareaRef.current) textareaRef.current.style.height = "auto";
 
@@ -178,31 +255,129 @@ function ChatContent() {
       const res = await fetch("/dashboard/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: userMsg.content }),
+        body: JSON.stringify({ message: msgContent }),
       });
 
       if (!res.ok) {
         const errData = await res.json();
         setError(errData.error || `Error ${res.status}`);
         setIsLoading(false);
+        setStatusText("");
         return;
       }
 
-      const data = await res.json();
-      const assistantMsg: Message = {
-        role: "assistant",
-        content: data.content || "",
-        metadata: data.toolExecutions?.length
-          ? { toolExecutions: data.toolExecutions }
-          : undefined,
-      };
-      setMessages((prev) => [...prev, assistantMsg]);
+      // Check if SSE response
+      const contentType = res.headers.get("content-type") || "";
+      if (contentType.includes("text/event-stream")) {
+        const reader = res.body?.getReader();
+        const decoder = new TextDecoder();
+        let buffer = "";
+
+        if (!reader) {
+          setError("No response body");
+          setIsLoading(false);
+          return;
+        }
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split("\n");
+          buffer = lines.pop() || "";
+
+          let eventType = "";
+          for (const line of lines) {
+            if (line.startsWith("event: ")) {
+              eventType = line.slice(7).trim();
+            } else if (line.startsWith("data: ") && eventType) {
+              try {
+                const data = JSON.parse(line.slice(6));
+
+                switch (eventType) {
+                  case "status":
+                    setStatusText(data.message);
+                    break;
+
+                  case "text":
+                    setStreamingText((prev) => prev + data.content);
+                    break;
+
+                  case "tool_start":
+                    setStatusText(
+                      `Running ${data.tool}...`
+                    );
+                    setLiveTools((prev) => [
+                      ...prev,
+                      { tool: data.tool, description: data.description },
+                    ]);
+                    break;
+
+                  case "tool_complete":
+                    setLiveTools((prev) =>
+                      prev.filter(
+                        (t) =>
+                          !(
+                            t.tool === data.tool &&
+                            t.description === data.description
+                          )
+                      )
+                    );
+                    setCompletedTools((prev) => [...prev, data]);
+                    setStatusText("");
+                    break;
+
+                  case "error":
+                    setError(data.message);
+                    break;
+
+                  case "done": {
+                    // Final message — add to messages list
+                    const assistantMsg: Message = {
+                      role: "assistant",
+                      content: data.content || "",
+                      metadata: data.toolExecutions?.length
+                        ? { toolExecutions: data.toolExecutions }
+                        : undefined,
+                    };
+                    setMessages((prev) => [...prev, assistantMsg]);
+                    setStreamingText("");
+                    setLiveTools([]);
+                    setCompletedTools([]);
+                    setStatusText("");
+                    break;
+                  }
+                }
+              } catch {
+                // Ignore JSON parse errors
+              }
+              eventType = "";
+            }
+          }
+        }
+      } else {
+        // Fallback: non-SSE JSON response
+        const data = await res.json();
+        const assistantMsg: Message = {
+          role: "assistant",
+          content: data.content || "",
+          metadata: data.toolExecutions?.length
+            ? { toolExecutions: data.toolExecutions }
+            : undefined,
+        };
+        setMessages((prev) => [...prev, assistantMsg]);
+      }
     } catch (err) {
       setError(
         `Connection error: ${err instanceof Error ? err.message : "Unknown"}`
       );
     } finally {
       setIsLoading(false);
+      setStreamingText("");
+      setLiveTools([]);
+      setCompletedTools([]);
+      setStatusText("");
     }
   };
 
@@ -225,7 +400,7 @@ function ChatContent() {
               onClick={() => setSidebarOpen(false)}
               className="text-atlas-dim hover:text-atlas-text text-xs"
             >
-              ✕
+              \u2715
             </button>
           </div>
           <div className="flex-1 overflow-y-auto p-2 space-y-1">
@@ -257,13 +432,13 @@ function ChatContent() {
             onClick={() => setSidebarOpen(true)}
             className="absolute left-0 top-1/2 z-10 bg-atlas-surface/80 border border-slate-700/30 rounded-r-md px-1 py-3 text-atlas-muted hover:text-atlas-text text-xs"
           >
-            ▸
+            \u25B8
           </button>
         )}
 
         {/* Messages */}
         <div className="flex-1 overflow-y-auto p-5 space-y-4">
-          {messages.length === 0 && (
+          {messages.length === 0 && !isLoading && (
             <div className="text-center py-20">
               <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-atlas-purple to-atlas-blue mb-4">
                 <span className="text-2xl font-extrabold text-white">A</span>
@@ -273,8 +448,8 @@ function ChatContent() {
               </h2>
               <p className="text-sm text-atlas-muted max-w-md mx-auto">
                 Your autonomous builder for the algorithmic forex pipeline. I
-                can research, write code, run analysis, and build — not just
-                talk about it.
+                can research, write code, run analysis, and build &mdash; not
+                just talk about it.
               </p>
             </div>
           )}
@@ -318,9 +493,11 @@ function ChatContent() {
                             EXECUTED {msg.metadata.toolExecutions.length} TOOL
                             {msg.metadata.toolExecutions.length > 1 ? "S" : ""}
                           </div>
-                          {msg.metadata.toolExecutions.map((exec, j) => (
-                            <ToolExecutionCard key={j} exec={exec} />
-                          ))}
+                          {msg.metadata.toolExecutions.map(
+                            (exec: ToolExecution, j: number) => (
+                              <ToolExecutionCard key={j} exec={exec} />
+                            )
+                          )}
                         </div>
                       )}
                   </div>
@@ -331,28 +508,95 @@ function ChatContent() {
             </div>
           ))}
 
+          {/* Live streaming state */}
           {isLoading && (
             <div className="flex gap-3">
               <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-atlas-purple to-purple-800 flex items-center justify-center text-[11px] font-extrabold text-white">
                 A
               </div>
-              <div className="px-4 py-3 rounded-xl bg-atlas-surface/60 border border-slate-700/10">
-                <div className="flex items-center gap-2">
-                  <div className="flex gap-1">
-                    {[0, 1, 2].map((j) => (
-                      <div
+              <div className="max-w-[80%] rounded-xl bg-atlas-surface/60 border border-slate-700/10">
+                {/* Streaming text */}
+                {streamingText && (
+                  <div
+                    className="chat-markdown px-4 py-3"
+                    dangerouslySetInnerHTML={{
+                      __html: renderMarkdown(streamingText),
+                    }}
+                  />
+                )}
+
+                {/* Completed tools */}
+                {completedTools.length > 0 && (
+                  <div
+                    className={`${streamingText ? "border-t border-slate-700/15" : ""} px-3 py-2 space-y-1`}
+                  >
+                    <div className="text-[10px] font-bold text-atlas-muted tracking-wider mb-1">
+                      EXECUTED {completedTools.length} TOOL
+                      {completedTools.length > 1 ? "S" : ""}
+                    </div>
+                    {completedTools.map((exec, j) => (
+                      <ToolExecutionCard key={j} exec={exec} />
+                    ))}
+                  </div>
+                )}
+
+                {/* Live running tools */}
+                {liveTools.length > 0 && (
+                  <div className="px-3 py-2 space-y-1">
+                    {liveTools.map((t, j) => (
+                      <LiveToolCard
                         key={j}
-                        className="w-1.5 h-1.5 rounded-full bg-atlas-purple"
-                        style={{
-                          animation: `bounce3 1.2s ease-in-out ${j * 0.2}s infinite`,
-                        }}
+                        tool={t.tool}
+                        description={t.description}
                       />
                     ))}
                   </div>
-                  <span className="text-[11px] text-atlas-muted">
-                    Thinking & executing...
-                  </span>
-                </div>
+                )}
+
+                {/* Status indicator */}
+                {!streamingText && completedTools.length === 0 && (
+                  <div className="px-4 py-3">
+                    <div className="flex items-center gap-2">
+                      <div className="flex gap-1">
+                        {[0, 1, 2].map((j) => (
+                          <div
+                            key={j}
+                            className="w-1.5 h-1.5 rounded-full bg-atlas-purple"
+                            style={{
+                              animation: `bounce3 1.2s ease-in-out ${j * 0.2}s infinite`,
+                            }}
+                          />
+                        ))}
+                      </div>
+                      <span className="text-[11px] text-atlas-muted">
+                        {statusText || "Thinking & executing..."}
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Status bar when tools are running */}
+                {(streamingText || completedTools.length > 0) &&
+                  statusText && (
+                    <div className="px-3 py-1.5 border-t border-slate-700/15">
+                      <div className="flex items-center gap-2">
+                        <div className="flex gap-0.5">
+                          {[0, 1, 2].map((j) => (
+                            <div
+                              key={j}
+                              className="w-1 h-1 rounded-full bg-atlas-purple"
+                              style={{
+                                animation: `bounce3 1.2s ease-in-out ${j * 0.2}s infinite`,
+                              }}
+                            />
+                          ))}
+                        </div>
+                        <span className="text-[10px] text-atlas-muted">
+                          {statusText}
+                        </span>
+                      </div>
+                    </div>
+                  )}
               </div>
             </div>
           )}
@@ -382,7 +626,7 @@ function ChatContent() {
                   sendMessage();
                 }
               }}
-              placeholder="Talk to Atlas AI — it can research, write code, run scripts, and build autonomously..."
+              placeholder="Talk to Atlas AI &mdash; it can research, write code, run scripts, and build autonomously..."
               rows={1}
               className="flex-1 px-4 py-2.5 rounded-lg bg-atlas-surface/60 border border-slate-700/30 text-atlas-text placeholder-atlas-dim text-sm resize-none focus:outline-none focus:border-atlas-purple/40 focus:ring-1 focus:ring-atlas-purple/20"
             />
@@ -396,7 +640,7 @@ function ChatContent() {
           </div>
           <div className="text-center mt-1.5">
             <span className="text-[10px] text-atlas-dim">
-              {input.length} chars · Ctrl+Enter to send
+              {input.length} chars &middot; Ctrl+Enter to send
             </span>
           </div>
         </div>

@@ -47,11 +47,16 @@ COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
 RUN mkdir -p /var/www/atlas-workspace/{hypotheses,strategies,shared,data,alt-data,tools,scorecards,reports,research,post-mortems,sandbox,shared/mql5-templates} \
     && chown -R nextjs:nodejs /var/www/atlas-workspace
 
-# Set up Python virtual environment
+# Set up Python virtual environment with all data science packages
 RUN python3 -m venv /var/www/atlas-workspace/.venv \
     && /var/www/atlas-workspace/.venv/bin/pip install --no-cache-dir \
     numpy pandas scipy statsmodels matplotlib seaborn scikit-learn requests beautifulsoup4 \
+    arch hurst pymannkendall vectorbt \
     && chown -R nextjs:nodejs /var/www/atlas-workspace/.venv
+
+# Fix numba/matplotlib cache dirs for non-root user
+ENV NUMBA_CACHE_DIR=/tmp/numba_cache
+ENV MPLCONFIGDIR=/tmp/matplotlib
 
 # Create initial state document
 COPY --chown=nextjs:nodejs workspace-init/state.md /var/www/atlas-workspace/state.md

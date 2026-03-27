@@ -45,6 +45,8 @@ async function buildTree(dirPath: string, relativePath: string = "", depth: numb
   }
 }
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   try {
     const tree = await buildTree(WORKSPACE);

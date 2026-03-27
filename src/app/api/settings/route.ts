@@ -5,6 +5,8 @@ import * as bcrypt from "bcryptjs";
 
 const ENCRYPTED_KEYS = ["anthropic_api_key", "openai_api_key"];
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   try {
     const settings = await prisma.setting.findMany();
