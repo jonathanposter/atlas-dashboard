@@ -144,6 +144,53 @@ function LiveToolCard({
   );
 }
 
+function DeployNotification({
+  status,
+  message,
+}: {
+  status: "deploying" | "success" | "failed";
+  message: string;
+}) {
+  const config = {
+    deploying: {
+      bg: "bg-blue-500/10 border-blue-500/30",
+      text: "text-blue-400",
+      icon: "⟳",
+      pulse: true,
+    },
+    success: {
+      bg: "bg-atlas-green/10 border-atlas-green/30",
+      text: "text-atlas-green",
+      icon: "✓",
+      pulse: false,
+    },
+    failed: {
+      bg: "bg-atlas-red/10 border-atlas-red/30",
+      text: "text-atlas-red",
+      icon: "✗",
+      pulse: false,
+    },
+  }[status];
+
+  return (
+    <div
+      className={`fixed top-4 right-4 z-50 px-4 py-2.5 rounded-lg border ${config.bg} backdrop-blur-sm shadow-lg ${config.pulse ? "animate-pulse" : ""}`}
+    >
+      <div className="flex items-center gap-2">
+        <span className={`text-sm ${config.text} ${status === "deploying" ? "animate-spin" : ""}`}>
+          {config.icon}
+        </span>
+        <span className={`text-[11px] font-semibold ${config.text}`}>
+          {status === "deploying" ? "Deploying..." : status === "success" ? "Deployed" : "Deploy Failed"}
+        </span>
+        <span className="text-[10px] text-atlas-dim max-w-[200px] truncate">
+          {message}
+        </span>
+      </div>
+    </div>
+  );
+}
+
 function ApprovalCard({
   approval,
   onApprove,
@@ -224,6 +271,10 @@ export default function AtlasChatPanel({
   const [pendingApproval, setPendingApproval] =
     useState<PendingApproval | null>(null);
   const [isApproving, setIsApproving] = useState(false);
+  const [deployStatus, setDeployStatus] = useState<{
+    status: "deploying" | "success" | "failed";
+    message: string;
+  } | null>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -295,15 +346,31 @@ export default function AtlasChatPanel({
                 setStreamingText((prev) => prev + data.content);
                 break;
 
-              case "tool_start":
+              case "tool_start": {
                 setStatusText(`Running ${data.tool}...`);
                 setLiveTools((prev) => [
                   ...prev,
                   { tool: data.tool, description: data.description },
                 ]);
+                // Detect deploy-related commands
+                const cmdStart = (data.description || "").toLowerCase();
+                if (
+                  data.tool === "run_shell_command" &&
+                  (cmdStart.includes("deploy") ||
+                    cmdStart.includes("build") ||
+                    cmdStart.includes("restart") ||
+                    cmdStart.includes("git pull") ||
+                    cmdStart.includes("pm2"))
+                ) {
+                  setDeployStatus({
+                    status: "deploying",
+                    message: data.description || "",
+                  });
+                }
                 break;
+              }
 
-              case "tool_complete":
+              case "tool_complete": {
                 setLiveTools((prev) =>
                   prev.filter(
                     (t) =>
@@ -315,7 +382,24 @@ export default function AtlasChatPanel({
                 );
                 setCompletedTools((prev) => [...prev, data]);
                 setStatusText("");
+                // Update deploy notification
+                const cmdComplete = (data.description || "").toLowerCase();
+                if (
+                  data.tool === "run_shell_command" &&
+                  (cmdComplete.includes("deploy") ||
+                    cmdComplete.includes("build") ||
+                    cmdComplete.includes("restart") ||
+                    cmdComplete.includes("git pull") ||
+                    cmdComplete.includes("pm2"))
+                ) {
+                  setDeployStatus({
+                    status: data.success ? "success" : "failed",
+                    message: data.description || "",
+                  });
+                  setTimeout(() => setDeployStatus(null), 5000);
+                }
                 break;
+              }
 
               case "approval_required":
                 setPendingApproval(data);
@@ -496,7 +580,15 @@ export default function AtlasChatPanel({
   };
 
   return (
-    <div className="flex flex-col h-full overflow-hidden">
+    <div className="flex flex-col h-full overflow-hidden relative">
+      {/* Deploy notification */}
+      {deployStatus && (
+        <DeployNotification
+          status={deployStatus.status}
+          message={deployStatus.message}
+        />
+      )}
+
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-2 border-b border-slate-800/50 flex-shrink-0">
         <div className="flex items-center gap-2">
@@ -699,7 +791,7 @@ export default function AtlasChatPanel({
               adjustTextarea();
             }}
             onKeyDown={(e) => {
-              if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+              if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();
                 sendMessage();
               }
@@ -718,7 +810,7 @@ export default function AtlasChatPanel({
         </div>
         <div className="text-center mt-1">
           <span className="text-[9px] text-atlas-dim">
-            Ctrl+Enter to send
+            Enter to send &middot; Shift+Enter for new line
           </span>
         </div>
       </div>
