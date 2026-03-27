@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import AtlasChatPanel from "@/components/AtlasChatPanel";
+import PriorityFeed from "@/components/PriorityFeed";
 
 interface ProjectState {
   currentPhase: number;
@@ -56,9 +56,6 @@ export default function MissionControlPage() {
   const [pendingTasks, setPendingTasks] = useState<Task[]>([]);
   const [recentLogs, setRecentLogs] = useState<LogEntry[]>([]);
   const [strategies, setStrategies] = useState<Strategy[]>([]);
-  const [pendingPrompt, setPendingPrompt] = useState("");
-
-  const handlePromptConsumed = useCallback(() => setPendingPrompt(""), []);
 
   useEffect(() => {
     Promise.all([
@@ -228,18 +225,18 @@ export default function MissionControlPage() {
           </h3>
           <div className="grid grid-cols-2 gap-2">
             {[
-              { label: "Start Research Brief", prompt: "Generate a comprehensive research brief for a new trading hypothesis category. Suggest the most promising areas based on current academic literature and retail edge opportunities." },
-              { label: "Propose Next Tasks", prompt: "Based on the current project state, propose the next 3 high-priority tasks that will most effectively advance the pipeline. Format with clear success criteria." },
-              { label: "Review Strategy", prompt: "Perform an adversarial review of our current pipeline. What are the biggest risks and blind spots?" },
-              { label: "Weekly Health Report", prompt: "Generate a weekly health report covering: pipeline progress, hypothesis library status, key metrics, blockers, and recommended priorities for next week." },
+              { label: "Research Hypotheses", href: "/research" },
+              { label: "View Pipeline", href: "/pipeline" },
+              { label: "Review Tasks", href: "/tasks" },
+              { label: "Browse Workspace", href: "/workspace" },
             ].map((action, i) => (
-              <button
+              <Link
                 key={i}
-                onClick={() => setPendingPrompt(action.prompt)}
+                href={action.href}
                 className="text-left px-3 py-2 rounded-md text-xs font-medium text-atlas-purple-soft hover:bg-atlas-purple/10 border border-transparent hover:border-atlas-purple/20 transition-all"
               >
                 {action.label} →
-              </button>
+              </Link>
             ))}
           </div>
 
@@ -292,12 +289,9 @@ export default function MissionControlPage() {
         </div>
       </div>
 
-      {/* RIGHT COLUMN — Atlas AI Chat */}
+      {/* RIGHT COLUMN — Priority Feed */}
       <div className="flex-1 border-l border-slate-800/50 flex flex-col min-w-0">
-        <AtlasChatPanel
-          pendingPrompt={pendingPrompt}
-          onPromptConsumed={handlePromptConsumed}
-        />
+        <PriorityFeed />
       </div>
     </div>
   );

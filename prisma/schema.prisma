@@ -120,6 +120,21 @@ model ExecutionLog {
   @@map("execution_log")
 }
 
+model Priority {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String
+  reason      String   // why this is important now
+  action      String?  // link or action to take (e.g. "/research", "/pipeline")
+  source      String   @default("static") // "static" | "ai"
+  rank        Int      @default(0)
+  completed   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("priorities")
+}
+
 model BackgroundJob {
   id          Int       @id @default(autoincrement())
   type        String
